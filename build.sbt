@@ -25,3 +25,10 @@ test in assembly := {}
 mainClass in assembly := Some("io.mola.spark.checksum.App")
 
 assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala = false)
+
+artifact in (Compile, assembly) := {
+  val art = (artifact in (Compile, assembly)).value
+  art.withClassifier(Some("assembly"))
+}
+
+addArtifact(artifact in (Compile, assembly), assembly)
