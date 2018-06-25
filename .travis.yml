@@ -10,8 +10,11 @@ cache:
     - $HOME/.ivy2/cache
     - $HOME/.sbt
 
+before_script:
+  - bash .setup_hdfs.sh
+
 script:
-  - sbt ++$TRAVIS_SCALA_VERSION clean coverage test coverageReport
+  - sbt ++$TRAVIS_SCALA_VERSION clean coverage test it:test coverageReport
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)

@@ -19,6 +19,10 @@ class ChecksumSuite extends FunSuite with SharedSparkContext {
     assert(Checksum.relativize(Some("foo"), "foo/*") == "*")
     assert(Checksum.relativize(Some("file:/foo"), "file:/foo/bar") == "bar")
     assert(Checksum.relativize(Some("file:/foo"), "file:/foo/*") == "*")
+    assert(
+      Checksum.relativize(Some("hdfs://localhost:9000/test"),
+                          "hdfs://localhost:9000/test/foo") == "foo")
+
   }
 
   test("compute checksums") {
