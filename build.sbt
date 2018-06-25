@@ -2,7 +2,7 @@ organization := "io.mola"
 
 name := "checksum-spark"
 
-version := "0.1.0"
+enablePlugins(GitVersioning)
 
 scalaVersion := "2.11.12"
 
