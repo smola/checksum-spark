@@ -1,0 +1,10 @@
+dist: trusty
+sudo: false
+language: scala
+scala: 2.11.11
+
+cache:
+  directories:
+    - $HOME/.ivy2/cache
+    - $HOME/.sbt
+
