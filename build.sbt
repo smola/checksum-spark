@@ -4,7 +4,7 @@ name := "checksum-spark"
 
 version := "0.1.0"
 
-scalaVersion := "2.11.12"
+crossScalaVersions := Seq("2.10.7", "2.11.12")
 
 libraryDependencies += "org.apache.spark" %% "spark-sql" % "2.2.1" % Provided
 
