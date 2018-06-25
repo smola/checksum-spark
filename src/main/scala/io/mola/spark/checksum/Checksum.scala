@@ -10,7 +10,7 @@ object Checksum {
 
   def checksumFile(path: String)(
       implicit sc: SparkContext): RDD[(String, String)] = {
-    sc.textFile(path, minPartitions = 1000)
+    sc.textFile(path)
       .map(line => {
         val fields = line.split("\\s+", 2)
         fields(1) -> fields(0)

@@ -8,6 +8,8 @@ import org.apache.spark.sql.SparkSession
 case class Config(
     algorithm: String = null,
     ignoreMissing: Boolean = false,
+    quiet: Boolean = false,
+    status: Boolean = false,
     check: Boolean = false,
     checksums: String = null,
     base: Option[String] = None,
@@ -26,30 +28,39 @@ object App extends Logging {
       .getOrCreate()
     implicit val sc = spark.sparkContext
 
-    run(config)
+    val result = run(config)
+    if (!result) {
+      sys.exit(1)
+    }
   }
 
   def parseConfig(args: Array[String]): Option[Config] = {
     val parser = new scopt.OptionParser[Config](AppName) {
-      opt[Boolean]('c', "check")
+      opt[Unit]('c', "check")
         .text("read check sums from the FILEs and check them")
-        .action((v, c) => c.copy(check = v))
-        .validate({
-          case true  => Right()
-          case false => Left("only check mode is supported")
-        })
+        .action((v, c) => c.copy(check = true))
 
       opt[Unit]("ignore-missing")
         .text("don't fail or report status for missing files")
         .optional()
         .action((_, c) => c.copy(ignoreMissing = true))
 
-      opt[String]('a', "algorithm")
+      opt[Unit]("quiet")
+        .text("don't print OK for each successfully verified file")
+        .optional()
+        .action((_, c) => c.copy(quiet = true))
+
+      opt[Unit]("status")
+        .text("don't output anything, status code shows success")
+        .optional()
+        .action((_, c) => c.copy(status = true))
+
+      opt[String]("algorithm")
         .text("checksum algorithm")
         .withFallback(() => "md5")
         .action((v, c) => c.copy(algorithm = v))
 
-      opt[String]('b', "base")
+      opt[String]("base")
         .text("base directory")
         .optional()
         .action((v, c) => c.copy(base = Some(v)))
@@ -74,7 +85,7 @@ object App extends Logging {
     parser.parse(args, Config())
   }
 
-  def run(config: Config)(implicit sc: SparkContext): Unit = {
+  def run(config: Config)(implicit sc: SparkContext): Boolean = {
     sc.hadoopConfiguration
       .set("mapreduce.input.fileinputformat.input.dir.recursive", "true")
 
@@ -84,11 +95,33 @@ object App extends Logging {
         config.paths.map(p => new Path(new Path(base), p).toString)
     }
 
+    val newConfig = config.copy(paths = resolvedPaths)
+    if (config.check) {
+      check(newConfig)
+    } else {
+      compute(newConfig)
+    }
+  }
+
+  def compute(config: Config)(implicit sc: SparkContext): Boolean = {
+    Checksum
+      .compute(
+        config.base,
+        config.paths,
+        config.algorithm
+      )
+      .map({ case (path, hash) => s"$hash  $path" })
+      .saveAsTextFile(config.checksums)
+    true
+  }
+
+  def check(config: Config)(implicit sc: SparkContext): Boolean = {
+
     val results = Checksum
       .check(
         config.checksums,
         config.base,
-        resolvedPaths,
+        config.paths,
         config.algorithm
       )
       .toLocalIterator
@@ -97,12 +130,16 @@ object App extends Logging {
     var missing = 0
     results.foreach({
       case Match(path, _) =>
-        println(s"$path: OK")
+        if (!config.quiet && !config.status) {
+          println(s"$path: OK")
+        }
       case NotMatch(path, _, _) =>
-        println(s"$path: FAILED")
+        if (!config.status) {
+          println(s"$path: FAILED")
+        }
         unmatched += 1
       case MissingMatch(path, _) =>
-        if (!config.ignoreMissing) {
+        if (!config.ignoreMissing && !config.status) {
           println(s"$path: FAILED open or read")
         }
         missing += 1
@@ -120,6 +157,7 @@ object App extends Logging {
       }
     }
 
+    unmatched == 0 && (config.ignoreMissing || missing == 0)
   }
 
 }

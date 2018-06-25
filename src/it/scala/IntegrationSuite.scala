@@ -29,6 +29,7 @@ class IntegrationSuite extends FeatureSpec with SharedSparkContext {
       Console.withOut(buf) {
         App.main(
           Array(
+            "--check",
             "--base",
             s"$hdfsBase/test/test1",
             s"$hdfsBase/test/test1.md5",
