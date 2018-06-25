@@ -55,10 +55,11 @@ object Checksum {
             paths: Seq[String],
             algorithm: String)(implicit sc: SparkContext): RDD[BaseMatch] = {
     checksumFile(checksumPath)
-      .join(compute(base, paths, algorithm))
+      .leftOuterJoin(compute(base, paths, algorithm))
       .map({
-        case (path, (a, b)) if a == b => Match(path, a)
-        case (path, (a, b))           => NotMatch(path, a, b)
+        case (path, (a, None)) => MissingMatch(path, a)
+        case (path, (a, Some(b))) if a == b => Match(path, a)
+        case (path, (a, Some(b)))           => NotMatch(path, a, b)
       })
   }
 
@@ -77,9 +78,16 @@ case class Match(override val path: String, override val expected: String)
 
 }
 
+case class MissingMatch(override val path: String, override val expected: String)
+  extends BaseMatch {
+
+  override def matched: Boolean = false
+}
+
 case class NotMatch(override val path: String,
                     override val expected: String,
                     actual: String)
     extends BaseMatch {
+
   override def matched: Boolean = false
 }

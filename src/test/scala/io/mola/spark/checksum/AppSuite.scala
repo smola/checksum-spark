@@ -34,22 +34,29 @@ class AppSuite extends FunSuite with SharedSparkContext {
     assert(
       App
         .parseConfig(
-          Array("src/test/resources/test1.md5", "src/test/resources/test1"))
+          Array("src/test/resources/test1.md5", "src/test/resources/test1/*"))
         .get == Config(
         algorithm = "md5",
         checksums = "src/test/resources/test1.md5",
-        paths = Seq("src/test/resources/test1")
+        paths = Seq("src/test/resources/test1/*")
       ))
   }
 
   test("run") {
     implicit val sc = this.sc
+    val bufOut = new ByteArrayOutputStream()
     val config = Config(
       algorithm = "md5",
       checksums = s"file:$fixturesPath/test1.md5",
-      paths = Seq(s"file:$fixturesPath/test1")
+      base = Some(s"file:$fixturesPath/test1"),
+      paths = Seq(s"file:$fixturesPath/test1/*")
     )
-    App.run(config)
+    Console.withOut(bufOut) {
+      App.run(config)
+    }
+    val out = new String(bufOut.toByteArray)
+    assert(!out.contains("FAILED"))
+    assert(out.contains("OK"))
   }
 
 }
