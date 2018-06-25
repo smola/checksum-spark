@@ -1,6 +1,12 @@
 
 # checksum-spark [![Build Status](https://travis-ci.com/smola/checksum-spark.svg?branch=master)](https://travis-ci.com/smola/checksum-spark) [![Release](https://jitpack.io/v/io.mola/checksum-spark.svg)](https://jitpack.io/#smola/checksum-spark) [![codecov](https://codecov.io/gh/smola/checksum-spark/branch/master/graph/badge.svg)](https://codecov.io/gh/smola/checksum-spark)
 
+**checksum-spark** verifies and creates checksum files using Apache Spark.
+
+Design goals:
+
+* Keep CLI as close to [GNU coreutils](https://github.com/smola/checksum-spark) (e.g. [md5sum](http://www.gnu.org/software/coreutils/md5sum)) as possible.
+* Easy to use with HDFS or any storage supported by Apache Spark.
 
 ## Download
 
@@ -21,3 +27,10 @@ Or with [Coursier](http://get-coursier.io):
 ```
 coursier fetch --repository https://jitpack.io io.mola:checksum-spark_2.11:v0.1.0,classifier=assembly
 ```
+
+# License
+
+Copyright © 2018 Santiago M. Mola
+
+This project is released under the terms of the Apache License 2.0.
+
