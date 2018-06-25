@@ -3,7 +3,7 @@
 
 **checksum-spark** verifies and creates checksum files using Apache Spark.
 
-Design goals:
+## Design Goals
 
 * Keep CLI as close to [GNU coreutils](https://github.com/smola/checksum-spark) (e.g. [md5sum](http://www.gnu.org/software/coreutils/md5sum)) as possible.
 * Easy to use with HDFS or any storage supported by Apache Spark.
@@ -28,7 +28,7 @@ Or with [Coursier](http://get-coursier.io):
 coursier fetch --repository https://jitpack.io io.mola:checksum-spark_2.11:v0.2.0,classifier=assembly
 ```
 
-# License
+## License
 
 Copyright © 2018 Santiago M. Mola
 
