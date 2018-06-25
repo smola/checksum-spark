@@ -21,6 +21,7 @@ class AppSuite extends FunSuite with SharedSparkContext {
                      |Usage: checksum-spark [options] <checksums path> <path>
                      |
                      |  -c, --check <value>      read check sums from the FILEs and check them
+                     |  --ignore-missing         don't fail or report status for missing files
                      |  -a, --algorithm <value>  checksum algorithm
                      |  -b, --base <value>       base directory
                      |  <checksums path>         path of checksum file

@@ -7,6 +7,7 @@ import org.apache.spark.sql.SparkSession
 
 case class Config(
     algorithm: String = null,
+    ignoreMissing: Boolean = false,
     check: Boolean = false,
     checksums: String = null,
     base: Option[String] = None,
@@ -37,6 +38,11 @@ object App extends Logging {
           case true  => Right()
           case false => Left("only check mode is supported")
         })
+
+      opt[Unit]("ignore-missing")
+        .text("don't fail or report status for missing files")
+        .optional()
+        .action((_, c) => c.copy(ignoreMissing = true))
 
       opt[String]('a', "algorithm")
         .text("checksum algorithm")
@@ -78,7 +84,7 @@ object App extends Logging {
         config.paths.map(p => new Path(new Path(base), p).toString)
     }
 
-    val notMatch = Checksum
+    val results = Checksum
       .check(
         config.checksums,
         config.base,
@@ -87,22 +93,33 @@ object App extends Logging {
       )
       .toLocalIterator
 
-    var failures = 0
-    for (nm <- notMatch) {
-      if (nm.matched) {
-        println(s"${nm.path}: OK")
-      } else {
-        println(s"${nm.path}: FAILED")
-        failures += 1
+    var unmatched = 0
+    var missing = 0
+    results.foreach({
+      case Match(path, _) =>
+        println(s"$path: OK")
+      case NotMatch(path, _, _) =>
+        println(s"$path: FAILED")
+        unmatched += 1
+      case MissingMatch(path, _) =>
+        if (!config.ignoreMissing) {
+          println(s"$path: FAILED open or read")
+        }
+        missing += 1
+    })
+
+    Console.withOut(Console.err) {
+      if (unmatched > 0) {
+        println(
+          s"checksum-spark: WARNING: $unmatched computed checksums did NOT match")
+      }
+
+      if (!config.ignoreMissing && missing > 0) {
+        println(
+          s"checksum-spark: WARNING: $missing listed file could not be read")
       }
     }
 
-    if (failures > 0) {
-      Console.withOut(Console.err) {
-        println(
-          s"checksum-spark: WARNING: $failures computed checksums did NOT match")
-      }
-    }
   }
 
 }

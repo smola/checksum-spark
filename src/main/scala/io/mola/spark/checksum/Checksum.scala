@@ -57,7 +57,7 @@ object Checksum {
     checksumFile(checksumPath)
       .leftOuterJoin(compute(base, paths, algorithm))
       .map({
-        case (path, (a, None)) => MissingMatch(path, a)
+        case (path, (a, None))              => MissingMatch(path, a)
         case (path, (a, Some(b))) if a == b => Match(path, a)
         case (path, (a, Some(b)))           => NotMatch(path, a, b)
       })
@@ -78,8 +78,9 @@ case class Match(override val path: String, override val expected: String)
 
 }
 
-case class MissingMatch(override val path: String, override val expected: String)
-  extends BaseMatch {
+case class MissingMatch(override val path: String,
+                        override val expected: String)
+    extends BaseMatch {
 
   override def matched: Boolean = false
 }

@@ -71,7 +71,22 @@ class ChecksumSuite extends FunSuite with SharedSparkContext {
 
     assert(result.length == 100)
     assert(result.count(_.matched) == 95)
+  }
 
+  test("check one missing") {
+    implicit val sc = this.sc
+    val result = Checksum
+      .check(
+        "src/test/resources/test1_one_extra.md5",
+        Some(s"file:$fixturesPath/test1"),
+        Seq(s"file:$fixturesPath/test1/*"),
+        "md5"
+      )
+      .collect()
+
+    assert(result.length == 101)
+    assert(result.count(_.matched) == 100)
+    assert(result.count(_.isInstanceOf[MissingMatch]) == 1)
   }
 
 }
