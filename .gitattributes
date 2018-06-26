@@ -1,0 +1,2 @@
+sbt linguist-vendored
+src/test/resources linguist-generated
